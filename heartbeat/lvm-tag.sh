@@ -160,19 +160,21 @@ lvm_validate_all() {
 lvm_status() {
 	local rc=0
 
-	# If vg is running, make sure the correct tag is present. Otherwise we
-	# can not guarantee exclusive activation.
-	if ! check_tags; then
-		ocf_exit_reason "WARNING: $OCF_RESKEY_volgrpname is active without the cluster tag, \"$OUR_TAG\""
-		rc=$OCF_ERR_GENERIC
-	fi
+	if ! ocf_is_true "$OCF_RESKEY_volume_group_check_only"; then
+		# If vg is running, make sure the correct tag is present. Otherwise we
+		# can not guarantee exclusive activation.
+		if ! check_tags; then
+			ocf_exit_reason "WARNING: $OCF_RESKEY_volgrpname is active without the cluster tag, \"$OUR_TAG\""
+			rc=$OCF_ERR_GENERIC
+		fi
 
-	# make sure the environment for tags activation is still valid
-	if ! verify_tags_environment; then
-		rc=$OCF_ERR_GENERIC
+		# make sure the environment for tags activation is still valid
+		if ! verify_tags_environment; then
+			rc=$OCF_ERR_GENERIC
+		fi
+		# let the user know if their initrd is older than lvm.conf.
+		check_initrd_warning
 	fi
-	# let the user know if their initrd is older than lvm.conf.
-	check_initrd_warning
 
 	return $rc
 }

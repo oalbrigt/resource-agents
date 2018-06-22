@@ -103,6 +103,16 @@ logical volumes.
 <content type="string" default="false" />
 </parameter>
 
+<parameter name="volume_group_check_only" unique="0" required="0">
+<longdesc lang="en">
+If set, only the volume group will be checked during monitoring.
+
+WARNING: ONLY USE IF YOU HAVE ISSUES WITH TIMEOUTS!
+</longdesc>
+<shortdesc lang="en">Only check volume group during monitoring</shortdesc>
+<content type="string" default="false" />
+</parameter>
+
 </parameters>
 
 <actions>
