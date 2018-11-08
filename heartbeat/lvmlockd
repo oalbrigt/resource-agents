@@ -259,6 +259,11 @@ lvmlockd_start() {
 		return $OCF_ERR_GENERIC
 	fi
 
+	while ! silent_status; do
+		ocf_log debug "${LOCKD} is not running"
+		sleep 1
+	done
+
 	return $OCF_SUCCESS
 }
 
