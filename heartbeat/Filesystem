@@ -201,11 +201,13 @@ Only set this to "true" if you know what you are doing!
 This option allows specifying how to handle processes that are
 currently accessing the mount directory.
 
-"true"  : Default value, kill processes accessing mount point
-"safe"  : Kill processes accessing mount point using methods that
+"strict" : Default value, uses "true"-method unless the mount is being mounted
+           on top of a bind mount, in which case the "safe"-method will be used
+"true"   : Kill processes accessing mount point
+"safe"   : Kill processes accessing mount point using methods that
           avoid functions that could potentially block during process
           detection 
-"false" : Do not kill any processes.
+"false"  : Do not kill any processes.
 
 The 'safe' option uses shell logic to walk the /procs/ directory
 for pids using the mount point while the default option uses the
@@ -213,7 +215,7 @@ fuser cli tool. fuser is known to perform operations that can potentially
 block if unresponsive nfs mounts are in use on the system.
 </longdesc>
 <shortdesc lang="en">Kill processes before unmount</shortdesc>
-<content type="boolean" default="true" />
+<content type="boolean" default="strict" />
 </parameter>
 
 </parameters>
@@ -466,6 +468,15 @@ get_pids()
 	local dir=$1
 	local procs
 	local mmap_procs
+
+	if [ "$FORCE_UNMOUNT" = "strict" ]; then
+		FINDMNT=$(which findmnt 2> /dev/null)
+		if [ -z "$FINDMNT" ] || ! $FINDMNT -n --target $dir | grep -q "\["; then
+			FORCE_UNMOUNT="yes"
+		else
+			FORCE_UNMOUNT="safe"
+		fi
+	fi
 
 	if ocf_is_true  "$FORCE_UNMOUNT"; then
 		if [ "X${HOSTOS}" = "XOpenBSD" ];then
@@ -761,7 +772,7 @@ if [ $# -ne 1 ]; then
 fi
 
 # Check the OCF_RESKEY_ environment variables...
-FORCE_UNMOUNT="yes"
+FORCE_UNMOUNT="strict"
 if [ -n "${OCF_RESKEY_force_unmount}" ]; then
 	FORCE_UNMOUNT=$OCF_RESKEY_force_unmount
 fi
