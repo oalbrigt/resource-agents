@@ -1113,7 +1113,7 @@ ocf_promotion_score() {
 
 __ocf_set_defaults "$@"
 
-: ${OCF_TRACE_RA:=$OCF_RESKEY_trace_ra}
+: ${OCF_TRACE_RA:=${OCF_RESKEY_trace_ra:=$OCF_RESKEY_CRM_meta_trace_ra}}
 : ${OCF_RESKEY_trace_dir:="$HA_VARLIB/trace_ra"}
 ocf_is_true "$OCF_TRACE_RA" && ocf_start_trace
 
