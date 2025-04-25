@@ -60,7 +60,7 @@ specified Ethernet device, shelf, and slot number.
     <parameter name="device" required="1">
       <longdesc lang="en">
 The local block device (or file) to export as an AoE target.
-</longdesc>
+      </longdesc>
       <shortdesc lang="en">Device to export</shortdesc>
       <content type="string"/>
     </parameter>
@@ -74,7 +74,7 @@ The local Ethernet interface to use for exporting this AoE target.
     <parameter name="shelf" required="0">
       <longdesc lang="en">
 The AoE shelf number to use when exporting this target.
-</longdesc>
+      </longdesc>
       <shortdesc lang="en">AoE shelf number</shortdesc>
       <content type="integer"/>
     </parameter>
@@ -88,16 +88,24 @@ The AoE slot number to use when exporting this target.
     <parameter name="pid" required="0" unique="1">
       <longdesc lang="en">
 The file to record the daemon pid to.
-</longdesc>
+      </longdesc>
       <shortdesc lang="en">Daemon pid file</shortdesc>
       <content type="string" default="${OCF_RESKEY_pid_default}"/>
     </parameter>
     <parameter name="binary" required="0">
       <longdesc lang="en">
 Location of the vblade binary.
-</longdesc>
+      </longdesc>
       <shortdesc lang="en">vblade binary</shortdesc>
       <content type="string" default="${OCF_RESKEY_binary_default}"/>
+    </parameter>
+
+    <parameter name="trace_ra" reloadable="1">
+      <longdesc lang="en">
+Enable trace logging to $OCF_RESKEY_trace_dir.
+       </longdesc>
+      <shortdesc lang="en">Trace logging</shortdesc>
+      <content type="boolean"/>
     </parameter>
   </parameters>
   <actions>

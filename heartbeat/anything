@@ -308,6 +308,14 @@ before sending kill -SIGKILL. Defaults to 2/3 of the stop operation timeout.
 <shortdesc lang="en">Seconds to wait after having sent SIGTERM before sending SIGKILL in stop operation</shortdesc>
 <content type="string" default="${OCF_RESKEY_stop_timeout_default}"/>
 </parameter>
+
+<parameter name="trace_ra" reloadable="1">
+<longdesc lang="en">
+Enable trace logging to $OCF_RESKEY_trace_dir.
+</longdesc>
+<shortdesc lang="en">Trace logging</shortdesc>
+<content type="boolean"/>
+</parameter>
 </parameters>
 <actions>
 <action name="start"   timeout="20s" />

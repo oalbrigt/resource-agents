@@ -151,6 +151,13 @@ Value for the DHOST_OPTIONS java environment variable. If unset, original values
 <shortdesc lang="en">DHOST_OPTIONS value</shortdesc>
 <content type="string" default="${OCF_RESKEY_eDir_jvm_options_default}" />
 </parameter>
+<parameter name="trace_ra" reloadable="1">
+<longdesc lang="en">
+Enable trace logging to $OCF_RESKEY_trace_dir.
+</longdesc>
+<shortdesc lang="en">Trace logging</shortdesc>
+<content type="boolean"/>
+</parameter>
 </parameters>
 
 <actions>

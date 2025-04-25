@@ -178,6 +178,15 @@ This can be used for policy based routing. See man ip-rule(8).
 <content type="string" default="${OCF_RESKEY_table_default}" />
 </parameter>
 
+
+<parameter name="trace_ra" reloadable="1">
+<longdesc lang="en">
+Enable trace logging to $OCF_RESKEY_trace_dir.
+</longdesc>
+<shortdesc lang="en">Trace logging</shortdesc>
+<content type="boolean"/>
+</parameter>
+
 </parameters>
 
 <actions>

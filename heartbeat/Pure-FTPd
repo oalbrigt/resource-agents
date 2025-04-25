@@ -97,6 +97,14 @@ Valid options are "" for pure-ftpd, "mysql" for pure-ftpd-mysql,
 <content type="string" default="${OCF_RESKEY_pidfile_default}" />
 </parameter>
 
+<parameter name="trace_ra" reloadable="1">
+<longdesc lang="en">
+Enable trace logging to $OCF_RESKEY_trace_dir.
+</longdesc>
+<shortdesc lang="en">Trace logging</shortdesc>
+<content type="boolean"/>
+</parameter>
+
 </parameters>
 
 <actions>

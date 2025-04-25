@@ -54,6 +54,14 @@ The node list that should never sound the alarm.
 <shortdesc lang="en">Node list</shortdesc>
 <content type="string" default="" />
 </parameter>
+
+<parameter name="trace_ra" reloadable="1">
+<longdesc lang="en">
+Enable trace logging to $OCF_RESKEY_trace_dir.
+</longdesc>
+<shortdesc lang="en">Trace logging</shortdesc>
+<content type="boolean"/>
+</parameter>
 </parameters>
 
 <actions>

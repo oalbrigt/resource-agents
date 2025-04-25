@@ -101,6 +101,14 @@ Units:
 <content type="string" default="${OCF_RESKEY_delay_default}" />
 </parameter>
 
+<parameter name="trace_ra" reloadable="1">
+<longdesc lang="en">
+Enable trace logging to $OCF_RESKEY_trace_dir.
+</longdesc>
+<shortdesc lang="en">Trace logging</shortdesc>
+<content type="boolean"/>
+</parameter>
+
 </parameters>
 <actions>
 <action name="start"   timeout="20s" />

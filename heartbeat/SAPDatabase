@@ -248,6 +248,11 @@ This parameter should be set ONLY if is needed to monitor different services tha
   <shortdesc lang="en">path to a post-start script</shortdesc>
   <content type="string" default="${OCF_RESKEY_POST_STOP_USEREXIT_default}" />
  </parameter>
+ <parameter name="trace_ra" reloadable="1">
+  <longdesc lang="en">Enable trace logging to $OCF_RESKEY_trace_dir.</longdesc>
+  <shortdesc lang="en">Trace logging</shortdesc>
+  <content type="boolean"/>
+ </parameter>
 </parameters>
 
 <actions>

@@ -73,6 +73,14 @@ For example "/packages/conntrackd-0.9.14/etc/conntrackd/conntrackd.conf"</longde
 <shortdesc lang="en">Path to conntrackd.conf</shortdesc>
 <content type="string" default="$OCF_RESKEY_config_default"/>
 </parameter>
+
+<parameter name="trace_ra" reloadable="1">
+<longdesc lang="en">
+Enable trace logging to $OCF_RESKEY_trace_dir.
+</longdesc>
+<shortdesc lang="en">Trace logging</shortdesc>
+<content type="boolean"/>
+</parameter>
 </parameters>
 
 <actions>
