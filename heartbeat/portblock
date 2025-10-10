@@ -30,6 +30,7 @@ OCF_RESKEY_portno_default=""
 OCF_RESKEY_direction_default="in"
 OCF_RESKEY_action_default=""
 OCF_RESKEY_ip_default="0.0.0.0/0"
+OCF_RESKEY_use_reject_to_block_default="false"
 OCF_RESKEY_reset_local_on_unblock_stop_default="false"
 OCF_RESKEY_tickle_dir_default=""
 OCF_RESKEY_sync_script_default=""
@@ -40,6 +41,7 @@ OCF_RESKEY_sync_script_default=""
 : ${OCF_RESKEY_direction=${OCF_RESKEY_direction_default}}
 : ${OCF_RESKEY_action=${OCF_RESKEY_action_default}}
 : ${OCF_RESKEY_ip=${OCF_RESKEY_ip_default}}
+: ${OCF_RESKEY_use_reject_to_block=${OCF_RESKEY_use_reject_to_block_default}}
 : ${OCF_RESKEY_reset_local_on_unblock_stop=${OCF_RESKEY_reset_local_on_unblock_stop_default}}
 : ${OCF_RESKEY_tickle_dir=${OCF_RESKEY_tickle_dir_default}}
 : ${OCF_RESKEY_sync_script=${OCF_RESKEY_sync_script_default}}
@@ -195,6 +197,14 @@ actions.
 <content type="string" default="${OCF_RESKEY_action_default}" />
 </parameter>
 
+<parameter name="use_reject_to_block" unique="0" required="0">
+<longdesc lang="en">
+Use REJECT w/conntrack to clear connections when blocking.
+</longdesc>
+<shortdesc lang="en">Use REJECT w/conntrack to clear connections</shortdesc>
+<content type="boolean" default="${OCF_RESKEY_use_reject_to_block_default}" />
+</parameter>
+
 <parameter name="reset_local_on_unblock_stop" unique="0" required="0">
 <longdesc lang="en">
 If for some reason the long lived server side TCP sessions won't be cleaned up
@@ -263,6 +273,7 @@ If "both" is used, both the incoming and outgoing ports are blocked.
 <action name="demote" timeout="10s"/>
 <action name="status" depth="0" timeout="10s" interval="10s" />
 <action name="monitor" depth="0" timeout="10s" interval="10s" />
+<action name="monitor" depth="0" timeout="10s" interval="9s" role="Promoted" />
 <action name="meta-data" timeout="5s" />
 <action name="validate-all" timeout="5s" />
 </actions>
@@ -303,7 +314,11 @@ active_grep_pat()
     [ "$4" = "s" ] && ip=$src || ip=$dst
     echo "^\s\+ip $4addr ${ip} $1 $4port $2 ct state { established, related, new } drop$"
   else
-    echo "^DROP${w}${prot}${w}--${w}${src}${w}${dst}${w}multiport${w}${4}ports${w}${2}$"
+    if [ "$target" = "DROP" ]; then
+      echo "^DROP${w}${prot}${w}--${w}${src}${w}${dst}${w}multiport${w}${4}ports${w}${2}$"
+    else
+      echo "^REJECT${w}${prot}${w}--${w}${src}${w}${dst}${w}multiport${w}${4}ports${w}${2} ctstate NEW,RELATED,ESTABLISHED reject-with tcp-reset$"
+    fi
   fi
 }
 
@@ -394,17 +409,17 @@ tickle_local()
 
 SayActive()
 {
-  ocf_log debug "$CMD DROP rule [$*]  is running (OK)"
+  ocf_log debug "$CMD $target rule [$*]  is running (OK)"
 }
 
 SayConsideredActive()
 {
-  ocf_log debug "$CMD DROP rule [$*] considered to be running (OK)"
+  ocf_log debug "$CMD $target rule [$*] considered to be running (OK)"
 }
 
 SayInactive()
 {
-  ocf_log debug "$CMD DROP rule [$*] is inactive"
+  ocf_log debug "$CMD $target rule [$*] is inactive"
 }
 
 #PortStatus  {udp|tcp} portno,portno ip {in|out|both} {block|unblock}
@@ -425,7 +440,11 @@ PortStatus() {
     case $5 in
       block)
         SayActive $*
-        rc=$OCF_SUCCESS
+        if [ "$__OCF_ACTION" = "monitor" ] && [ "$promotion_score" = "$SCORE_PROMOTED" ]; then
+          rc=$OCF_RUNNING_MASTER
+        else
+          rc=$OCF_SUCCESS
+        fi
         ;;
       *)
         SayInactive $*
@@ -440,7 +459,11 @@ PortStatus() {
         ;;
       *)
         SayActive $*
-        rc=$OCF_SUCCESS
+        if [ "$__OCF_ACTION" = "monitor" ] && [ "$promotion_score" = "$SCORE_PROMOTED" ]; then
+          rc=$OCF_RUNNING_MASTER
+        else
+          rc=$OCF_SUCCESS
+        fi
         ;;
     esac
   else
@@ -505,7 +528,11 @@ DoPort()
         fi
         ;;
       iptables)
-        $IPTABLES $wait "$op" "$chain" -p "$proto" -${ds} "$ip" -m multiport --${ds}ports "$ports" -j DROP
+        if [ "$target" = "DROP" ]; then
+          $IPTABLES $wait "$op" "$chain" -p "$proto" -${ds} "$ip" -m multiport --${ds}ports "$ports" -j DROP
+        else
+          $IPTABLES $wait "$op" "$chain" -p "$proto" -${ds} "$ip" -m multiport --${ds}ports "$ports" -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j REJECT --reject-with tcp-reset
+        fi
         ;;
     esac
   fi
@@ -544,7 +571,11 @@ PortBLOCK()
           $IPTABLES $wait -I OUTPUT -p "$1" -s "$3" -m multiport --sports "$2" -j REJECT --reject-with tcp-reset
           tickle_local
         fi
-        $IPTABLES $wait -I INPUT -p "$1" -d "$3" -m multiport --dports "$2" -j DROP
+        if [ "$target" = "DROP" ]; then
+          $IPTABLES $wait -I INPUT -p "$1" -d "$3" -m multiport --dports "$2" -j DROP
+        else
+          $IPTABLES $wait -I INPUT -p "$1" -d "$3" -m multiport --dports "$2" -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j REJECT --reject-with tcp-reset
+        fi
         rc_in=$?
         if $try_reset ; then
           $IPTABLES $wait -D OUTPUT -p "$1" -s "$3" -m multiport --sports "$2" -j REJECT --reject-with tcp-reset
@@ -812,6 +843,7 @@ action=$OCF_RESKEY_action
 ip=$OCF_RESKEY_ip
 reset_local_on_unblock_stop=$OCF_RESKEY_reset_local_on_unblock_stop
 nodename=$(ocf_local_nodename)
+! ocf_is_true "$OCF_RESKEY_use_reject_to_block" && target="DROP" || target="REJECT"
 
 
 # If "tickle" is enabled, we need to record the list of currently established
@@ -863,6 +895,8 @@ if ocf_is_ms; then
   fi
 fi
 
+PortValidateAll
+
 case $__OCF_ACTION in
   start)
 			PortStart "$protocol" "$portno" "$ip" "$direction" "$action"
@@ -885,7 +919,6 @@ case $__OCF_ACTION in
 			;;
 
   validate-all)
-			PortValidateAll
 			;;
 
   *)			usage
